@@ -1,0 +1,38 @@
+name: "Update meta"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Install nix
+      uses: miuirussia/install-nix-action@master
+      with:
+        nix_path: nixpkgs=channel:nixpkgs-unstable
+        install_url: https://github.com/miuirussia/nix-unstable-installer/releases/latest/download/install
+        extra_nix_config: |
+          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+          experimental-features = nix-command flakes
+    - name: Update flakes, browser and codecs
+      run: |
+        set -x
+
+        git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        nix flake update
+        nix run .#update-browser
+        nix run .#update-codecs
+        STATUS=$(git status -s)
+        if [ -n "$STATUS" ]; then
+            git add meta
+            git commit -m "$(date) automatic update"
+            git push
+        fi
