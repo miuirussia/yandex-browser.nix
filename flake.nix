@@ -3,9 +3,12 @@
 
   inputs = {
     nixpkgs = { url = "github:miuirussia/nixpkgs/nixpkgs-unstable"; };
+
+    # flakes
+    flake-compat = { url = "github:edolstra/flake-compat"; flake = false; };
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, ... }:
     let
       stableFile = ./meta/yandex-browser-stable.json;
       betaFile = ./meta/yandex-browser-beta.json;
