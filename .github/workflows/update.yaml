@@ -34,6 +34,8 @@ jobs:
         nix flake update
         nix run .#update-browser
         nix run .#update-codecs
+        nix build .#yandex-browser-stable
+        nix build .#yandex-browser-beta
         STATUS=$(git status -s)
         if [ -n "$STATUS" ]; then
             git add meta
