@@ -33,6 +33,7 @@ jobs:
         STATUS=$(git status -s)
         if [ -n "$STATUS" ]; then
             git add meta
+            git add flake.lock
             git commit -m "$(date) automatic update"
             git push
         fi
