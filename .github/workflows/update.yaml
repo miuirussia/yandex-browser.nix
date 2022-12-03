@@ -31,13 +31,13 @@ jobs:
 
         git config --local user.email "${{ github.actor }}@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        nix flake update
         nix run .#update-browser
         nix run .#update-codecs
-        nix build .#yandex-browser-stable
-        nix build .#yandex-browser-beta
         STATUS=$(git status -s)
         if [ -n "$STATUS" ]; then
+            nix build .#yandex-browser-stable
+            nix build .#yandex-browser-beta
+            nix flake update
             git add meta
             git add flake.lock
             git commit -m "$(date) automatic update"
