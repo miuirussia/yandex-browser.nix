@@ -35,9 +35,9 @@ jobs:
         nix run .#update-codecs
         STATUS=$(git status -s)
         if [ -n "$STATUS" ]; then
+            nix flake update
             nix build .#yandex-browser-stable
             nix build .#yandex-browser-beta
-            nix flake update
             git add meta
             git add flake.lock
             git commit -m "$(date) automatic update"
