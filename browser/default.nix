@@ -18,6 +18,7 @@
 , cups
 , curl
 , dbus
+, dpkg
 , expat
 , fontconfig
 , freetype
@@ -50,7 +51,6 @@
 , at-spi2-atk
 , at-spi2-core
 , makeWrapper
-, vivaldi-ffmpeg-codecs
 , extensions ? [ ]
 }:
 
@@ -62,13 +62,32 @@ let
   codecsAttrs = builtins.fromJSON
     (builtins.readFile (../meta + "/${pname}-codecs.json"));
 
-  codecs = vivaldi-ffmpeg-codecs.overrideAttrs (oa: {
+  codecs = stdenv.mkDerivation rec {
+    pname = "chromium-codecs-ffmpeg-extra";
     version = codecsAttrs.version;
+
     src = fetchurl {
       url = codecsAttrs.url;
       hash = codecsAttrs.hash;
     };
-  });
+
+    buildInputs = [ dpkg ];
+
+    unpackPhase = ''
+      dpkg-deb -x $src .
+    '';
+
+    installPhase = ''
+      install -vD usr/lib/chromium-browser/libffmpeg.so $out/lib/libffmpeg.so
+    '';
+
+    meta = with lib; {
+      description = "Additional support for proprietary codecs for Chromium";
+      homepage = "https://ffmpeg.org/";
+      license = licenses.lgpl21;
+      platforms = [ "x86_64-linux" ];
+    };
+  };
 
   extensionJsonScript = id:
     let
