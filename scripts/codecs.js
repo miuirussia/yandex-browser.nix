@@ -31,12 +31,10 @@ const main = async () => {
 
             const resultJson = { url, path, version: chromeVersion, hash };
 
-            writeFileSync(resolve(OUTPATH, `${name}-codecs.json`), JSON.stringify(result_json));
+            writeFileSync(resolve(OUTPATH, `${name}-codecs.json`), JSON.stringify(resultJson));
           } catch (e) {
             console.error(`Failed get codecs from ${name}`, e);
           }
-        } else {
-          console.error(`Failed get codecs from ${name}: No chrome version detected`);
         }
       });
     }

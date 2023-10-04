@@ -18,7 +18,7 @@
 , cups
 , curl
 , dbus
-, dpkg
+, squashfsTools
 , expat
 , fontconfig
 , freetype
@@ -71,14 +71,14 @@ let
       hash = codecsAttrs.hash;
     };
 
-    buildInputs = [ dpkg ];
+    buildInputs = [ squashfsTools ];
 
     unpackPhase = ''
-      dpkg-deb -x $src .
+      unsquashfs -d . $src
     '';
 
     installPhase = ''
-      install -vD usr/lib/chromium-browser/libffmpeg.so $out/lib/libffmpeg.so
+      install -vD ${codecsAttrs.path} $out/lib/libffmpeg.so
     '';
 
     meta = with lib; {
