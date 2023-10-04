@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-
 const { resolve } = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const { readFileSync, writeFileSync } = require('fs');
 
 const OUTPATH = resolve(process.env.OUTPATH || 'meta');
 
-const CODECS_JSON = "https://browser-resources.s3.yandex.net/linux/codecs.json";
+const CODECS_JSON = "https://browser-resources.s3.yandex.net/linux/codecs_snap.json";
 
-const getPath = (path, dir) => resolve(`${path}/opt/yandex/${dir}/update-ffmpeg`);
+const getPath = (path, dir) => resolve(`${path}/opt/yandex/${dir}/yandex_browser`);
 
 const BROWSERS = [
   ['yandex-browser-stable', process.env.STABLE, 'browser'],
@@ -20,18 +19,26 @@ const main = async () => {
     const data = JSON.parse(String(execSync(`curl -s '${CODECS_JSON}'`)).trim());
 
     for (const [name, path, dir] of BROWSERS) {
-      try {
-        const [, shortVersion] = String(readFileSync(getPath(path, dir))).match(/jq -r '\."([\d.]*)"\[\]\?'/);
-        const url = data[shortVersion][0];
-        const [version] = url.match(/\d*\.\d*\.\d*\.\d*/);
-        const hash = JSON.parse(String(execSync(`nix store prefetch-file --json '${url}'`))).hash;
+      const proc = spawn('strings', [getPath(path, dir)]);
+      proc.stdout.on("data", chunk => {
+        const result = /Chrome\/(\d+\.\d+\.\d+\.\d+)/.exec(chunk.toString());
+        if (result) {
+          try {
+            const chromeVersion = result[1];
+            const [majorChromeVersion] = chromeVersion.split('.');
+            const { url, path } = data[majorChromeVersion];
+            const hash = JSON.parse(String(execSync(`nix store prefetch-file --json '${url}'`))).hash;
 
-        const result_json = { url, version, hash };
+            const resultJson = { url, path, version: chromeVersion, hash };
 
-        writeFileSync(resolve(OUTPATH, `${name}-codecs.json`), JSON.stringify(result_json));
-      } catch (e) {
-        console.error(`Failed get codecs from ${name}`, e);
-      }
+            writeFileSync(resolve(OUTPATH, `${name}-codecs.json`), JSON.stringify(result_json));
+          } catch (e) {
+            console.error(`Failed get codecs from ${name}`, e);
+          }
+        } else {
+          console.error(`Failed get codecs from ${name}: No chrome version detected`);
+        }
+      });
     }
   } catch (e) {
     console.error('Failed get codecs', e);
@@ -39,4 +46,3 @@ const main = async () => {
 };
 
 main();
-
