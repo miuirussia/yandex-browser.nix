@@ -2,7 +2,11 @@
 
 Nix files for installing Yandex Browser on NixOS
 
-**Warning** Yandex removes old releases from its repository, so always use the new version of this repository
+**Warning!** Yandex removes old releases from its repository, so always use the new version of this repository
+
+## Cache
+
+Use cachix cache for faster builds: https://app.cachix.org/cache/yandex-browser-nix#pull
 
 ## Installation
 
