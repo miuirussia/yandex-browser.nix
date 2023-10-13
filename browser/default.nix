@@ -24,6 +24,7 @@
 , freetype
 , gdk-pixbuf
 , glib
+, gst_all_1
 , gtk3
 , libX11
 , libxcb
@@ -165,6 +166,9 @@ stdenv.mkDerivation rec {
     nss
     pango
     stdenv.cc.cc.lib
+    gst_all_1.gstreamer
+    gst_all_1.gst-plugins-bad
+    gst_all_1.gst-libav
   ];
 
   unpackPhase = ''
