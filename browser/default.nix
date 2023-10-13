@@ -51,6 +51,7 @@
 , systemd
 , at-spi2-atk
 , at-spi2-core
+, xxd
 , makeWrapper
 , extensions ? [ ]
 }:
@@ -72,7 +73,9 @@ let
       hash = codecsAttrs.hash;
     };
 
-    buildInputs = [ squashfsTools ];
+    phases = [ "unpackPhase" "installPhase" ];
+
+    buildInputs = [ squashfsTools xxd ];
 
     unpackPhase = ''
       unsquashfs -d . $src
@@ -80,6 +83,7 @@ let
 
     installPhase = ''
       install -vD ${codecsAttrs.path} $out/lib/libffmpeg.so
+      echo -n $(sha1sum $out/lib/libffmpeg.so | xxd -r -p) > $out/codecs_checksum
     '';
 
     meta = with lib; {
@@ -186,6 +190,7 @@ stdenv.mkDerivation rec {
       --set "LD_LIBRARY_PATH" "${lib.concatStringsSep ":" runtimeDependencies}" \
       --add-flags ${lib.escapeShellArg "--use-gl=desktop --enable-features=VaapiVideoDecoder,VaapiVideoEncoder"}
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
+    ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
     mkdir -p $out/opt/yandex/${folderName}/Extensions
     ${lib.concatMapStringsSep "\n" extensionJsonScript extensions}
   '';
