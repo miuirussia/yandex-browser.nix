@@ -184,7 +184,10 @@ stdenv.mkDerivation rec {
   installPhase = ''
     set +xe
     cp $TMP/ya/{usr/share,opt} $out/ -R
-    substituteInPlace $out/share/applications/${desktopName}.desktop --replace /usr/ $out/
+    substituteInPlace $out/share/applications/${desktopName}.desktop \
+       --replace /usr/ $out/
+    substituteInPlace $out/share/applications/${desktopName}.desktop \
+       --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname} %U"
     chmod +x $out/opt/yandex/${folderName}/${binName}
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
       --set "LD_LIBRARY_PATH" "${lib.concatStringsSep ":" runtimeDependencies}" \
