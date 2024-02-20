@@ -52,6 +52,9 @@
 , at-spi2-atk
 , at-spi2-core
 , xxd
+
+, vulkan-loader, libGL, pciutils
+
 , makeWrapper
 , extensions ? [ ]
 }:
@@ -166,6 +169,7 @@ stdenv.mkDerivation rec {
     libxcb
     libxshmfence
     mesa
+    mesa.drivers
     nspr
     nss
     pango
@@ -188,9 +192,10 @@ stdenv.mkDerivation rec {
        --replace /usr/ $out/
     substituteInPlace $out/share/applications/${desktopName}.desktop \
        --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname} %U"
-    chmod +x $out/opt/yandex/${folderName}/${binName}
+    yaBinary=$out/opt/yandex/${folderName}/${binName}
+    chmod +x $yaBinary
+    patchelf --set-rpath "${lib.makeLibraryPath [ libGL vulkan-loader pciutils ]}:$(patchelf --print-rpath "$yaBinary")" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
-      --set "LD_LIBRARY_PATH" "${lib.concatStringsSep ":" runtimeDependencies}" \
       --add-flags ${lib.escapeShellArg "--enable-features=VaapiVideoDecoder,VaapiVideoEncoder"} \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
