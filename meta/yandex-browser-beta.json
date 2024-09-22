@@ -1,1 +1,6 @@
-{"pname":"yandex-browser-beta","version":"24.7.1.1124-1","hash":"sha256-VkL5oAgW7bfXkV+Dfh0jUA3Mt26f6vHGCp3Cca+M67g=","url":"https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_24.7.1.1124-1_amd64.deb"}
+{
+  "pname": "yandex-browser-beta",
+  "version": "24.7.3.1264-1",
+  "hash": "sha256-i/nAGvWdS5DEul0cMSGZP2yqBlbKKXTuDS/Y993lkTo=",
+  "url": "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_24.7.3.1264-1_amd64.deb"
+}
