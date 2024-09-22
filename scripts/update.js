@@ -8,8 +8,8 @@ const OUTPATH = resolve(process.env.OUTPATH || 'meta');
 
 const repoUrl = "https://repo.yandex.ru/yandex-browser/deb";
 const packageUrls = [
-  `${repoUrl}/dists/stable/main/binary-amd64/Packages`,
-  `${repoUrl}/dists/beta/main/binary-amd64/Packages`,
+  `${repoUrl}/dists/stable/main/binary-amd64/Packages.gz`,
+  `${repoUrl}/dists/beta/main/binary-amd64/Packages.gz`,
 ];
 
 const processUrl = async url => {
