@@ -148,7 +148,6 @@ stdenv.mkDerivation rec {
     freetype
     gdk-pixbuf
     glib
-    gnome2.GConf
     gtk3
     libX11
     libXScrnSaver
