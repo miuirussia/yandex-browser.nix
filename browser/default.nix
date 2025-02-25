@@ -19,6 +19,7 @@
 , curl
 , dbus
 , squashfsTools
+, wayland
 , expat
 , fontconfig
 , freetype
@@ -26,6 +27,8 @@
 , glib
 , gst_all_1
 , gtk3
+, libGL
+, libGLU
 , libX11
 , libxcb
 , libXScrnSaver
@@ -38,6 +41,7 @@
 , libXrandr
 , libXrender
 , libXtst
+, libcap
 , libdrm
 , libnotify
 , libopus
@@ -45,6 +49,8 @@
 , libuuid
 , libva
 , libxshmfence
+, vulkan-loader
+, pciutils
 , mesa
 , nspr
 , pango
@@ -52,9 +58,6 @@
 , at-spi2-atk
 , at-spi2-core
 , xxd
-
-, vulkan-loader, libGL, pciutils
-
 , makeWrapper
 , extensions ? [ ]
 }:
@@ -149,6 +152,8 @@ stdenv.mkDerivation rec {
     gdk-pixbuf
     glib
     gtk3
+    libGL
+    libGLU
     libX11
     libXScrnSaver
     libXcomposite
@@ -160,6 +165,7 @@ stdenv.mkDerivation rec {
     libXrandr
     libXrender
     libXtst
+    libcap
     libdrm
     libnotify
     libopus
@@ -167,15 +173,13 @@ stdenv.mkDerivation rec {
     libva
     libxcb
     libxshmfence
+    pciutils
     mesa
-    mesa.drivers
     nspr
     nss
     pango
+    wayland
     stdenv.cc.cc.lib
-    gst_all_1.gstreamer
-    gst_all_1.gst-plugins-bad
-    gst_all_1.gst-libav
   ];
 
   unpackPhase = ''
@@ -195,12 +199,35 @@ stdenv.mkDerivation rec {
     chmod +x $yaBinary
     patchelf --set-rpath "${lib.makeLibraryPath [ libGL vulkan-loader pciutils ]}:$(patchelf --print-rpath "$yaBinary")" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
-      --add-flags ${lib.escapeShellArg "--enable-features=VaapiVideoDecoder,VaapiVideoEncoder"} \
+      --add-flags ${lib.escapeShellArg "--gl=egl-angle --angle=opengl --use-angle=vulkan --enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo"} \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
     ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
+    sed -e '90iexport FOUND_FFMPEG=1' -i $out/opt/yandex/${folderName}/${binName}
+    sed -e '91iexport THE_BEST_FFMPEG_LIBRARY=''$HERE/libffmpeg.so' -i $out/opt/yandex/${folderName}/${binName}
+
+    # install extensions
     mkdir -p $out/opt/yandex/${folderName}/Extensions
     ${lib.concatMapStringsSep "\n" extensionJsonScript extensions}
+  '';
+
+  postFixup = ''
+    # Make sure that libGLESv2 and libvulkan are found by dlopen in both chromium binary and ANGLE libGLESv2.so.
+    # libpci (from pciutils) is needed by dlopen in angle/src/gpu_info_util/SystemInfo_libpci.cpp
+      
+    for binary in "$out/opt/yandex/${folderName}/yandex_browser" "$out/opt/yandex/${folderName}/libGLESv2.so"; do
+      patchelf --set-rpath "${
+        lib.makeLibraryPath [
+          libGL
+          vulkan-loader
+          pciutils
+        ]
+      }:$(patchelf --print-rpath "$binary")" "$binary"
+    done
+
+    # replace bundled vulkan-loader
+    rm "$out/opt/yandex/${folderName}/libvulkan.so.1"
+    ln -s -t "$out/opt/yandex/${folderName}" "${lib.getLib vulkan-loader}/lib/libvulkan.so.1"
   '';
 
   runtimeDependencies = map lib.getLib [
