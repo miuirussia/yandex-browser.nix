@@ -117,6 +117,48 @@ let
       EOF
     '';
 
+  deps = [
+    libGL
+    vulkan-loader
+    pciutils
+    libva
+    libdrm
+    mesa
+    wayland
+    gtk3
+    alsa-lib
+    at-spi2-atk
+    at-spi2-core
+    atk
+    cairo
+    cups
+    dbus
+    expat
+    fontconfig
+    freetype
+    gdk-pixbuf
+    glib
+    harfbuzzFull
+    libX11
+    libxcb
+    libXcomposite
+    libXcursor
+    libXdamage
+    libXext
+    libXfixes
+    libXi
+    libXrandr
+    libXrender
+    libXtst
+    libxshmfence
+    nspr
+    nss
+    pango
+    systemd
+  ];
+
+  rpath = lib.makeLibraryPath deps + ":" + lib.makeSearchPathOutput "lib" "lib64" deps;
+
 in
 stdenv.mkDerivation rec {
   inherit pname version;
@@ -131,55 +173,18 @@ stdenv.mkDerivation rec {
     makeWrapper
   ];
 
-  buildInputs = [
+  buildInputs = deps ++ [
     flac
     harfbuzzFull
     nss
     snappy
     xdg-utils
     xorg.libxkbfile
-    alsa-lib
-    at-spi2-atk
-    at-spi2-core
-    atk
-    cairo
-    cups
-    curl
-    dbus
-    expat
-    fontconfig.lib
-    freetype
-    gdk-pixbuf
-    glib
-    gtk3
-    libGL
     libGLU
-    libX11
-    libXScrnSaver
-    libXcomposite
-    libXcursor
-    libXdamage
-    libXext
-    libXfixes
-    libXi
-    libXrandr
-    libXrender
-    libXtst
-    libcap
-    libdrm
     libnotify
     libopus
     libuuid
-    libva
-    libxcb
-    libxshmfence
-    pciutils
-    mesa
-    nspr
-    nss
-    pango
-    wayland
-    stdenv.cc.cc.lib
+    libpulseaudio
   ];
 
   unpackPhase = ''
@@ -197,9 +202,11 @@ stdenv.mkDerivation rec {
        --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname} %U"
     yaBinary=$out/opt/yandex/${folderName}/${binName}
     chmod +x $yaBinary
-    patchelf --set-rpath "${lib.makeLibraryPath [ libGL vulkan-loader pciutils ]}:$(patchelf --print-rpath "$yaBinary")" "$yaBinary"
+    patchelf --set-rpath "${rpath}" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
-      --add-flags ${lib.escapeShellArg "--gl=egl-angle --angle=opengl --use-angle=vulkan --enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo"} \
+      --prefix LD_LIBRARY_PATH : "${rpath}" \
+      --add-flags "--gl=egl-angle --angle=opengl" \
+      --add-flags "--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo" \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
     ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
@@ -212,17 +219,8 @@ stdenv.mkDerivation rec {
   '';
 
   postFixup = ''
-    # Make sure that libGLESv2 and libvulkan are found by dlopen in both chromium binary and ANGLE libGLESv2.so.
-    # libpci (from pciutils) is needed by dlopen in angle/src/gpu_info_util/SystemInfo_libpci.cpp
-      
-    for binary in "$out/opt/yandex/${folderName}/yandex_browser" "$out/opt/yandex/${folderName}/libGLESv2.so"; do
-      patchelf --set-rpath "${
-        lib.makeLibraryPath [
-          libGL
-          vulkan-loader
-          pciutils
-        ]
-      }:$(patchelf --print-rpath "$binary")" "$binary"
+    for binary in "$out/opt/yandex/${folderName}/yandex_browser" "$out/opt/yandex/${folderName}/libGLESv2.so" "$out/opt/yandex/${folderName}/libEGL.so"; do
+      patchelf --set-rpath "${rpath}" "$binary"
     done
 
     # replace bundled vulkan-loader
