@@ -205,7 +205,7 @@ stdenv.mkDerivation rec {
     patchelf --set-rpath "${rpath}" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
       --prefix LD_LIBRARY_PATH : "${rpath}" \
-      --add-flags "--gl=egl-angle --angle=opengl --use-angle=vulkan" \
+      --add-flags "--gl=egl-angle --angle=opengl" \
       --add-flags "--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo" \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
