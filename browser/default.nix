@@ -199,7 +199,7 @@ stdenv.mkDerivation rec {
     substituteInPlace $out/share/applications/${desktopName}.desktop \
        --replace /usr/ $out/
     substituteInPlace $out/share/applications/${desktopName}.desktop \
-       --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname} %U"
+       --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname}"
     yaBinary=$out/opt/yandex/${folderName}/${binName}
     chmod +x $yaBinary
     patchelf --set-rpath "${rpath}" "$yaBinary"
