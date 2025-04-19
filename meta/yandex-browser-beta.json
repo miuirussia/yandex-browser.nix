@@ -1,6 +1,6 @@
 {
   "pname": "yandex-browser-beta",
-  "version": "25.2.1.941-1",
-  "hash": "sha256-hCM1dVjlUMKh7G8w0RX7d4Dv1drP8cmb9H2RdsDXtcQ=",
-  "url": "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_25.2.1.941-1_amd64.deb"
+  "version": "25.2.6.703-1",
+  "hash": "sha256-pc8nMg/69U/iNNQQvevSwiL5ivf4rdbBXOypXfLrnk4=",
+  "url": "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-beta/yandex-browser-beta_25.2.6.703-1_amd64.deb"
 }
