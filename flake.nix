@@ -34,7 +34,7 @@
           ];
         };
       };
-      node = pkgs.nodejs-18_x;
+      node = pkgs.nodejs;
 
       browsers = {
         yandex-browser-beta = pkgs.callPackage ((import ./browser) betaMeta) { };
