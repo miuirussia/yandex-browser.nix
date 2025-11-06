@@ -205,9 +205,8 @@ stdenv.mkDerivation rec {
     patchelf --set-rpath "${rpath}" "$yaBinary"
     makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
       --prefix LD_LIBRARY_PATH : "${rpath}" \
-      --add-flags "--gl=egl-angle --angle=opengl" \
-      --add-flags "--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo" \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
+      --add-flags "--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo,WaylandWindowDecorations,UseOzonePlatform" \
+      --add-flags "''${NIXOS_OZONE_WL:+''${WAYLAND_DISPLAY:+--ozone-platform=wayland --use-gl=egl}}"
     ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
     ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
     sed -e '90iexport FOUND_FFMPEG=1' -i $out/opt/yandex/${folderName}/${binName}
