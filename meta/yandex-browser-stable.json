@@ -1,6 +1,6 @@
 {
   "pname": "yandex-browser-stable",
-  "version": "25.10.1.1173-1",
-  "hash": "sha256-MewVX1C6DsnE1IQTIurZsZZCmSbt7a7gxMm0yqk3qmQ=",
-  "url": "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-stable/yandex-browser-stable_25.10.1.1173-1_amd64.deb"
+  "version": "25.12.1.1217-1",
+  "hash": "sha256-qNy6vbZDsyiXKNCiaigSoYRnmR7BCCrf9tkunOWbfO0=",
+  "url": "https://repo.yandex.ru/yandex-browser/deb/pool/main/y/yandex-browser-stable/yandex-browser-stable_25.12.1.1217-1_amd64.deb"
 }
