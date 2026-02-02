@@ -37,8 +37,8 @@
       node = pkgs.nodejs;
 
       browsers = {
-        yandex-browser-beta = pkgs.callPackage ((import ./browser) betaMeta) { };
-        yandex-browser-stable = pkgs.callPackage ((import ./browser) stableMeta) { };
+        yandex-browser-beta = pkgs.callPackage ./browser ( betaMeta // { } );
+        yandex-browser-stable = pkgs.callPackage ./browser (stableMeta // { });
       };
     in
     {
@@ -54,23 +54,23 @@
         update-browser = {
           type = "app";
           program = toString (pkgs.writeScript "update-browser" ''
-            #!/usr/bin/env bash
-            set -exuo pipefail
+              #!/usr/bin/env bash
+              set -exuo pipefail
 
-            ${node}/bin/node scripts/update.js
+              ${node}/bin/node scripts/update.js
           '');
         };
 
         update-codecs = {
           type = "app";
           program = toString (pkgs.writeScript "update-codecs" ''
-            #!/usr/bin/env bash
-            set -exuo pipefail
+              #!/usr/bin/env bash
+              set -exuo pipefail
 
-            export STABLE=${browsers.yandex-browser-stable}
-            export BETA=${browsers.yandex-browser-beta}
+              export STABLE=${browsers.yandex-browser-stable}
+              export BETA=${browsers.yandex-browser-beta}
 
-            ${node}/bin/node scripts/codecs.js
+              ${node}/bin/node scripts/codecs.js
           '');
         };
       };

@@ -1,144 +1,97 @@
-{ pname, version, hash, url }:
-
-{ stdenv
-, lib
-, fetchurl
-, autoPatchelfHook
-, wrapGAppsHook3
-, flac
-, gnome2
-, harfbuzzFull
-, nss
-, snappy
-, xdg-utils
-, xorg
-, alsa-lib
-, atk
-, cairo
-, cups
-, curl
-, dbus
-, squashfsTools
-, wayland
-, expat
-, fontconfig
-, freetype
-, gdk-pixbuf
-, glib
-, gst_all_1
-, gtk3
-, libGL
-, libGLU
-, libX11
-, libxcb
-, libXScrnSaver
-, libXcomposite
-, libXcursor
-, libXdamage
-, libXext
-, libXfixes
-, libXi
-, libXrandr
-, libXrender
-, libXtst
-, libcap
-, libdrm
-, libnotify
-, libopus
-, libpulseaudio
-, libuuid
-, libva
-, libxshmfence
-, vulkan-loader
-, pciutils
-, mesa
-, nspr
-, pango
-, systemd
-, at-spi2-atk
-, at-spi2-core
-, xxd
-, makeWrapper
-, extensions ? [ ]
+{
+  pname,
+  version,
+  hash,
+  url,
+  stdenv,
+  lib,
+  fetchurl,
+  autoPatchelfHook,
+  wrapGAppsHook3,
+  makeWrapper,
+  addDriverRunpath,
+  patchelf,
+  alsa-lib,
+  at-spi2-atk,
+  at-spi2-core,
+  atk,
+  cairo,
+  cups,
+  curl,
+  dbus,
+  expat,
+  fontconfig,
+  freetype,
+  gdk-pixbuf,
+  glib,
+  gtk3,
+  libX11,
+  libxcb,
+  libXcomposite,
+  libXcursor,
+  libXdamage,
+  libXext,
+  libXfixes,
+  libXi,
+  libxkbcommon,
+  libXrandr,
+  libXrender,
+  libXScrnSaver,
+  libxshmfence,
+  libXtst,
+  libgbm,
+  nspr,
+  nss,
+  pango,
+  systemd,
+  libcap,
+  libva,
+  pciutils,
+  xdg-utils,
+  flac,
+  libopus,
+  snappy,
+  squashfsTools,
+  wayland,
+  xxd,
+  vulkan-loader,
+  mesa,
+  libglvnd,
+  libpulseaudio,
+  extensions ? [ ],
 }:
 
 let
-  desktopName = if pname == "yandex-browser-stable" then "yandex-browser" else pname;
   folderName = if pname == "yandex-browser-stable" then "browser" else "browser-beta";
-  binName = desktopName;
 
-  codecsAttrs = builtins.fromJSON
-    (builtins.readFile (../meta + "/${pname}-codecs.json"));
-
-  codecs = stdenv.mkDerivation rec {
-    pname = "chromium-codecs-ffmpeg-extra";
-    version = codecsAttrs.version;
-
-    src = fetchurl {
-      url = codecsAttrs.url;
-      hash = codecsAttrs.hash;
-    };
-
-    phases = [ "unpackPhase" "installPhase" ];
-
-    buildInputs = [ squashfsTools xxd ];
-
-    unpackPhase = ''
-      unsquashfs -d . $src
-    '';
-
-    installPhase = ''
-      install -vD ${codecsAttrs.path} $out/lib/libffmpeg.so
-      echo -n $(sha1sum $out/lib/libffmpeg.so | xxd -r -p) > $out/codecs_checksum
-    '';
-
-    meta = with lib; {
-      description = "Additional support for proprietary codecs for Chromium";
-      homepage = "https://ffmpeg.org/";
-      license = licenses.lgpl21;
-      platforms = [ "x86_64-linux" ];
-    };
+  codecsAttrs = builtins.fromJSON (builtins.readFile (../meta + "/${pname}-codecs.json"));
+  codecs = stdenv.mkDerivation {
+    pname = "yandex-codecs";
+    inherit (codecsAttrs) version;
+    src = fetchurl { inherit (codecsAttrs) url hash; };
+    nativeBuildInputs = [
+      squashfsTools
+      xxd
+    ];
+    unpackPhase = "unsquashfs -d . $src";
+    installPhase = "install -vD ${codecsAttrs.path} $out/lib/libffmpeg.so";
   };
 
-  extensionJsonScript = id:
-    let
-      split = lib.splitString ";" id;
-      id' = lib.elemAt split 0;
-      updateUrl =
-        if lib.length split > 1
-        then lib.elemAt split 1
-        else "https://clients2.google.com/service/update2/crx";
-    in
-    ''
-      cat > $out/opt/yandex/${folderName}/Extensions/${id'}.json <<EOF
-      {
-        "external_update_url": "${updateUrl}"
-      }
-      EOF
-    '';
-
   deps = [
-    libGL
-    vulkan-loader
-    pciutils
-    libva
-    libdrm
-    mesa
-    wayland
-    gtk3
     alsa-lib
     at-spi2-atk
     at-spi2-core
     atk
     cairo
     cups
+    curl
     dbus
     expat
     fontconfig
     freetype
     gdk-pixbuf
     glib
-    harfbuzzFull
+    gtk3
     libX11
     libxcb
     libXcomposite
@@ -147,92 +100,111 @@ let
     libXext
     libXfixes
     libXi
+    libxkbcommon
     libXrandr
     libXrender
-    libXtst
+    libXScrnSaver
     libxshmfence
+    libXtst
+    libgbm
     nspr
     nss
     pango
     systemd
+    libcap
+    libva
+    pciutils
+    xdg-utils
+    flac
+    libopus
+    snappy
+    vulkan-loader
+    mesa
+    libglvnd
+    wayland
+    libpulseaudio
+    stdenv.cc.cc.lib
   ];
 
-  rpath = lib.makeLibraryPath deps + ":" + lib.makeSearchPathOutput "lib" "lib64" deps;
+  rpath = lib.makeLibraryPath deps;
 
 in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   inherit pname version;
 
-  src = fetchurl {
-    inherit url hash;
-  };
+  src = fetchurl { inherit url hash; };
 
   nativeBuildInputs = [
     autoPatchelfHook
     wrapGAppsHook3
     makeWrapper
+    addDriverRunpath
+    patchelf
   ];
 
-  buildInputs = deps ++ [
-    flac
-    harfbuzzFull
-    nss
-    snappy
-    xdg-utils
-    xorg.libxkbfile
-    libGLU
-    libnotify
-    libopus
-    libuuid
-    libpulseaudio
+  buildInputs = deps;
+
+  autoPatchelfIgnoreMissingDeps = [
+    "libQt5Core.so.5"
+    "libQt5Gui.so.5"
+    "libQt5Widgets.so.5"
+    "libQt6Core.so.6"
+    "libQt6Gui.so.6"
+    "libQt6Widgets.so.6"
   ];
 
   unpackPhase = ''
-    mkdir $TMP/ya/ $out/bin/ -p
-    ar vx $src
-    tar --no-overwrite-dir -xvf data.tar.xz -C $TMP/ya/
+    ar x $src
+    tar xf data.tar.xz
   '';
 
   installPhase = ''
-    set +xe
-    cp $TMP/ya/{usr/share,opt} $out/ -R
-    substituteInPlace $out/share/applications/${desktopName}.desktop \
-       --replace /usr/ $out/
-    substituteInPlace $out/share/applications/${desktopName}.desktop \
-       --replace "Exec=$out/bin/${pname}" "Exec=$out/bin/${pname}"
-    yaBinary=$out/opt/yandex/${folderName}/${binName}
-    chmod +x $yaBinary
-    patchelf --set-rpath "${rpath}" "$yaBinary"
-    makeWrapper $out/opt/yandex/${folderName}/${binName} "$out/bin/${pname}" \
-      --prefix LD_LIBRARY_PATH : "${rpath}" \
-      --add-flags "--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiVideoEncoder,UseMultiPlaneFormatForHardwareVideo,WaylandWindowDecorations,UseOzonePlatform" \
-      --add-flags "''${NIXOS_OZONE_WL:+''${WAYLAND_DISPLAY:+--ozone-platform=wayland --use-gl=egl}}"
-    ln -s ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
-    ln -s ${codecs}/codecs_checksum $out/opt/yandex/${folderName}/codecs_checksum
-    sed -e '90iexport FOUND_FFMPEG=1' -i $out/opt/yandex/${folderName}/${binName}
-    sed -e '91iexport THE_BEST_FFMPEG_LIBRARY=''$HERE/libffmpeg.so' -i $out/opt/yandex/${folderName}/${binName}
+    runHook preInstall
 
-    # install extensions
-    mkdir -p $out/opt/yandex/${folderName}/Extensions
-    ${lib.concatMapStringsSep "\n" extensionJsonScript extensions}
+    mkdir -p $out/opt/yandex/${folderName} $out/bin $out/share
+    cp -r opt/yandex/${folderName}/* $out/opt/yandex/${folderName}/
+    cp -r usr/share/* $out/share/
+
+    substituteInPlace $out/share/applications/*.desktop \
+      --replace /usr/bin/ $out/bin/
+
+    ln -sf ${codecs}/lib/libffmpeg.so $out/opt/yandex/${folderName}/libffmpeg.so
+
+    exe=$out/opt/yandex/${folderName}/yandex_browser
+    patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$exe"
+    addDriverRunpath "$exe"
+
+    makeWrapper "$exe" "$out/bin/${pname}" \
+      --prefix PATH : "${lib.makeBinPath [ xdg-utils ]}" \
+      --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH" \
+      --set FOUND_FFMPEG 1 \
+      --set THE_BEST_FFMPEG_LIBRARY "$out/opt/yandex/${folderName}/libffmpeg.so" \
+      --run '
+        export LD_PRELOAD="${
+          lib.makeLibraryPath [ libpulseaudio ]
+        }/libpulse.so.0''${LD_PRELOAD:+:''$LD_PRELOAD}"
+
+        export LD_LIBRARY_PATH="${rpath}:${addDriverRunpath.driverLink}/lib''${LD_LIBRARY_PATH:+:''$LD_LIBRARY_PATH}"
+
+        if [ -n "$WAYLAND_DISPLAY" ]; then
+          export NIXOS_OZONE_WL=1
+          if  command -v nvidia-smi >/dev/null || lsmod | grep -q nvidia; then
+             EXTRA_FLAGS="--ozone-platform=wayland --use-gl=angle --use-angle=gl"
+          else
+             EXTRA_FLAGS="--ozone-platform-hint=auto"
+          fi
+        fi
+      ' \
+      --add-flags "--ignore-gpu-blocklist" \
+      --add-flags "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer,CanvasOopRasterization,WaylandWindowDecorations" \
+      --add-flags "\$EXTRA_FLAGS"
+
+    runHook postInstall
   '';
 
   postFixup = ''
-    for binary in "$out/opt/yandex/${folderName}/yandex_browser" "$out/opt/yandex/${folderName}/libGLESv2.so" "$out/opt/yandex/${folderName}/libEGL.so"; do
-      patchelf --set-rpath "${rpath}" "$binary"
-    done
-
-    # replace bundled vulkan-loader
-    rm "$out/opt/yandex/${folderName}/libvulkan.so.1"
-    ln -s -t "$out/opt/yandex/${folderName}" "${lib.getLib vulkan-loader}/lib/libvulkan.so.1"
+    find $out/opt/yandex/${folderName} -type f -name "*.so*" -exec patchelf --set-rpath "${rpath}:${addDriverRunpath.driverLink}/lib" {} \;
   '';
-
-  runtimeDependencies = map lib.getLib [
-    libpulseaudio
-    curl
-    systemd
-    codecs
-  ] ++ buildInputs;
 
   meta = with lib; {
     description = "Yandex Web Browser";
