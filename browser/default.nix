@@ -201,7 +201,7 @@ stdenv.mkDerivation {
         export YANDEX_FLAGS="$FLAGS"
       ' \
       --add-flags "--ignore-gpu-blocklist" \
-      --add-flags "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer,CanvasOopRasterization,WaylandWindowDecorations" \
+      --add-flags "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer,CanvasOopRasterization,WaylandWindowDecorations,WebGPU" \
       --add-flags "\''${YANDEX_FLAGS:-}"
 
     runHook postInstall
