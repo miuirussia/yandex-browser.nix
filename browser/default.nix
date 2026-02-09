@@ -186,18 +186,23 @@ stdenv.mkDerivation {
 
         export LD_LIBRARY_PATH="${rpath}:${addDriverRunpath.driverLink}/lib''${LD_LIBRARY_PATH:+:''$LD_LIBRARY_PATH}"
 
-        if [ -n "$WAYLAND_DISPLAY" ]; then
+        FLAGS=""
+        if [ -n "$WAYLAND_DISPLAY" ] || [ "$XDG_SESSION_TYPE" = "wayland" ]; then
           export NIXOS_OZONE_WL=1
-          if  command -v nvidia-smi >/dev/null || lsmod | grep -q nvidia; then
-             EXTRA_FLAGS="--ozone-platform=wayland --use-gl=angle --use-angle=gl"
-          else
-             EXTRA_FLAGS="--ozone-platform-hint=auto"
+          FLAGS="$FLAGS --ozone-platform=wayland"
+
+          if command -v nvidia-smi >/dev/null 2>/dev/null || lsmod | grep -q nvidia; then
+            FLAGS="$FLAGS --use-gl=angle --use-angle=gl"
           fi
+        else
+          FLAGS="$FLAGS --ozone-platform=x11"
         fi
+
+        export YANDEX_FLAGS="$FLAGS"
       ' \
       --add-flags "--ignore-gpu-blocklist" \
       --add-flags "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer,CanvasOopRasterization,WaylandWindowDecorations" \
-      --add-flags "\$EXTRA_FLAGS"
+      --add-flags "\''${YANDEX_FLAGS:-}"
 
     runHook postInstall
   '';
