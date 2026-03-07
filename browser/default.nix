@@ -140,6 +140,7 @@ stdenv.mkDerivation {
     makeWrapper
     addDriverRunpath
     patchelf
+    gtk3
   ];
 
   buildInputs = deps;
@@ -161,9 +162,20 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p $out/opt/yandex/${folderName} $out/bin $out/share
+    mkdir -p $out/opt/yandex/${folderName} $out/bin $out/share/icons/hicolor
+
     cp -r opt/yandex/${folderName}/* $out/opt/yandex/${folderName}/
     cp -r usr/share/* $out/share/
+
+    # Install icons to standard locations
+    mkdir -p $out/share/icons/hicolor/{16x16,24x24,32x32,48x48,64x64,128x128,256x256}/apps
+    cp $out/opt/yandex/${folderName}/product_logo_16.png $out/share/icons/hicolor/16x16/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_24.png $out/share/icons/hicolor/24x24/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_32.png $out/share/icons/hicolor/32x32/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_48.png $out/share/icons/hicolor/48x48/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_64.png $out/share/icons/hicolor/64x64/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_128.png $out/share/icons/hicolor/128x128/apps/yandex-browser.png
+    cp $out/opt/yandex/${folderName}/product_logo_256.png $out/share/icons/hicolor/256x256/apps/yandex-browser.png
 
     substituteInPlace $out/share/applications/*.desktop \
       --replace /usr/bin/ $out/bin/
@@ -209,6 +221,7 @@ stdenv.mkDerivation {
 
   postFixup = ''
     find $out/opt/yandex/${folderName} -type f -name "*.so*" -exec patchelf --set-rpath "${rpath}:${addDriverRunpath.driverLink}/lib" {} \;
+    gtk-update-icon-cache -f -t $out/share/icons/hicolor
   '';
 
   meta = with lib; {
