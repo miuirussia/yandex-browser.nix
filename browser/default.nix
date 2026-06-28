@@ -59,6 +59,7 @@
   libglvnd,
   libpulseaudio,
   extensions ? [ ],
+  commandLineArgs ? [ ],
 }:
 
 let
@@ -199,7 +200,9 @@ stdenv.mkDerivation {
         export LD_LIBRARY_PATH="${rpath}:${addDriverRunpath.driverLink}/lib''${LD_LIBRARY_PATH:+:''$LD_LIBRARY_PATH}"
 
         FLAGS=""
-        if [ -n "$WAYLAND_DISPLAY" ] || [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+        if [ "''${NIXOS_OZONE_WL:-}" = "0" ]; then
+          FLAGS="$FLAGS --ozone-platform=x11"
+        elif [ -n "$WAYLAND_DISPLAY" ] || [ "$XDG_SESSION_TYPE" = "wayland" ]; then
           export NIXOS_OZONE_WL=1
           FLAGS="$FLAGS --ozone-platform=wayland"
 
@@ -214,7 +217,8 @@ stdenv.mkDerivation {
       ' \
       --add-flags "--ignore-gpu-blocklist" \
       --add-flags "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer,CanvasOopRasterization,WaylandWindowDecorations,WebGPU" \
-      --add-flags "\''${YANDEX_FLAGS:-}"
+      --add-flags "\''${YANDEX_FLAGS:-}" \
+      ${lib.concatMapStringsSep " " (x: "--add-flags ${lib.escapeShellArg x}") commandLineArgs}
 
     runHook postInstall
   '';
